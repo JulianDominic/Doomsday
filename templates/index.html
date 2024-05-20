@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
+{% endblock %}
+
+{% block body %}
+    <div id="date-container">
+        <p>Guess the day of the week:</p>
+        <p>{{ random_date }}</p>
+        {% if correct is true %}
+            <p>Correct!</p>
+        {% elif correct is false %}
+            <p>Wrong! It was {{ day }}</p>
+        {% endif %}
+    </div>
+    <div>
+        <form action="{{ url_for('check_guess') }}" id="day" method="post" novalidate>
+            <select name="guess">
+                <option value="Monday">Monday</option>
+                <option value="Tuesday">Tuesday</option>
+                <option value="Wednesday">Wednesday</option>
+                <option value="Thursday">Thursday</option>
+                <option value="Friday">Friday</option>
+                <option value="Saturday">Saturday</option>
+                <option value="Sunday">Sunday</option>
+                </select>
+            <button>Submit</button>
+        </form>
+    </div>
+{% endblock %}
