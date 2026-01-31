@@ -1,17 +1,30 @@
 package main
 
 import (
+	"fmt"
+	"log"
 	"math/rand/v2"
+	"net/http"
+	"strconv"
+	"text/template"
 	"time"
 )
 
 type Date struct {
-	day   int
-	month int
-	year  int
+	Day   int `json:"day"`
+	Month int `json:"month"`
+	Year  int `json:"year"`
+}
+
+func (d Date) String() string {
+	return fmt.Sprintf("%d-%d-%d", d.Day, d.Month, d.Year)
 }
 
 var monthDays map[int][]int
+var templates = template.Must(template.ParseFiles(
+	"templates/index.html",
+	"templates/date.html",
+))
 
 func main() {
 	monthDays = map[int][]int{
@@ -28,11 +41,89 @@ func main() {
 		11: {30},
 		12: {31},
 	}
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("GET /", rootHandler)
+	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+	mux.HandleFunc("GET /date", getDateHandler)
+	mux.HandleFunc("POST /date", postDateHandler)
+
+	server := &http.Server{
+		Addr:    ":8080",
+		Handler: loggingMiddleware(mux),
+	}
+	server.ListenAndServe()
 }
 
-func checkWeekday(date Date, guess string) bool {
-	t := time.Date(date.year, time.Month(date.month), date.day, 0, 0, 0, 0, time.UTC)
-	return t.Weekday().String() == guess
+type responseWriter struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		wrapped := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
+		next.ServeHTTP(wrapped, r)
+		log.Printf("%d %s %s; %v", wrapped.statusCode, r.Method, r.URL.RequestURI(), time.Since(start))
+	})
+}
+
+func rootHandler(w http.ResponseWriter, r *http.Request) {
+	templates.ExecuteTemplate(w, "index.html", nil)
+}
+
+func getDateHandler(w http.ResponseWriter, r *http.Request) {
+	date := newDate(2025, 2026, monthDays)
+	templates.ExecuteTemplate(w, "date", date)
+}
+
+func postDateHandler(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
+	day, err := strconv.ParseInt(r.FormValue("day"), 10, 0)
+	if err != nil {
+		http.Error(w, "Error parsing 'day'", http.StatusBadRequest)
+		return
+	}
+	month, err := strconv.ParseInt(r.FormValue("month"), 10, 0)
+	if err != nil {
+		http.Error(w, "Error parsing 'month'", http.StatusBadRequest)
+		return
+	}
+	year, err := strconv.ParseInt(r.FormValue("year"), 10, 0)
+	if err != nil {
+		http.Error(w, "Error parsing 'year'", http.StatusBadRequest)
+		return
+	}
+
+	if !(isValidDate(int(day), int(month), int(year))) {
+		http.Error(w, "Invalid date", http.StatusBadRequest)
+		return
+	}
+
+	date := Date{
+		Day:   int(day),
+		Month: int(month),
+		Year:  int(year),
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+	isCorrect, answer := checkWeekday(date, r.FormValue("guess"))
+	if isCorrect {
+		fmt.Fprint(w, "<p class='text-green-600'>Correct!</p>")
+	} else {
+		fmt.Fprint(w, "<p class='text-red-600'>Wrong! "+date.String()+" was a "+answer+"</p>")
+	}
+}
+
+func checkWeekday(date Date, guess string) (bool, string) {
+	t := time.Date(date.Year, time.Month(date.Month), date.Day, 0, 0, 0, 0, time.UTC)
+	weekday := t.Weekday().String()
+	return weekday == guess, weekday
 }
 
 func newDate(startYear int, endYear int, monthDays map[int][]int) Date {
@@ -57,4 +148,23 @@ func isLeapYear(year int) bool {
 		return false
 	}
 	return year%4 == 0
+}
+
+func isValidDate(day int, month int, year int) bool {
+	leapYear := isLeapYear(year)
+	// check if month is valid
+	if !(1 <= month && month <= 12) {
+		return false
+	}
+	// check if day is valid
+	var maxDays int
+	if leapYear && month == 2 {
+		maxDays = monthDays[month][1] + 1
+	} else {
+		maxDays = monthDays[month][0] + 1
+	}
+	if !(1 <= day && day <= maxDays) {
+		return false
+	}
+	return true
 }

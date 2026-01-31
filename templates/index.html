@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/static/htmx.min.js"></script>
+    <script src="/static/tailwind.js"></script>
+    <title>Doomsday Algorithm</title>
+</head>
+
+<body>
+    <div class="flex flex-col items-center justify-center m-4 gap-4">
+        <h1 class="text-3xl">
+            Guess the day of the week:
+        </h1>
+        <form class="flex flex-col m-4 gap-4" hx-post="/date" hx-target="#result" hx-trigger="click from:#submit">
+            <div hx-get="/date" hx-trigger="load, click from:#submit" hx-target="#date"></div>
+            <div id="date">
+                {{ block "date" . }}
+                {{ end }}
+            </div>
+            <div id="result"></div>
+            <select class="border border-solid rounded-xl p-2" name="guess">
+                <option>Monday</option>
+                <option>Tuesday</option>
+                <option>Wednesday</option>
+                <option>Thursday</option>
+                <option>Friday</option>
+                <option>Saturday</option>
+                <option>Sunday</option>
+            </select>
+            <button action="submit" id="submit" class="border border-solid rounded-xl p-1 w-2xs">Submit</button>
+        </form>
+    </div>
+</body>
+
+</html>
