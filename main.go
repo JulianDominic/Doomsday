@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"math/rand/v2"
@@ -48,10 +49,14 @@ func main() {
 	mux.HandleFunc("GET /date", getDateHandler)
 	mux.HandleFunc("POST /date", postDateHandler)
 
+	protocol := "http"
+	serverAddr := "localhost:8080"
+
 	server := &http.Server{
-		Addr:    ":8080",
+		Addr:    "localhost:8080",
 		Handler: loggingMiddleware(mux),
 	}
+	log.Printf("Server starting on %s://%s", protocol, serverAddr)
 	server.ListenAndServe()
 }
 
@@ -74,8 +79,23 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getDateHandler(w http.ResponseWriter, r *http.Request) {
-	date := newDate(2025, 2026, monthDays)
+	date := newDate(2000, 2026, monthDays)
+	if r.Header.Get("HX-Request") != "true" {
+		w.Header().Set("Content-Type", "application/json")
+		jsonData, err := json.Marshal(date)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Write(jsonData)
+		return
+	}
 	templates.ExecuteTemplate(w, "date", date)
+}
+
+type DateAnswer struct {
+	Correct bool   `json:"correct"`
+	Answer  string `json:"answer"`
 }
 
 func postDateHandler(w http.ResponseWriter, r *http.Request) {
@@ -111,19 +131,31 @@ func postDateHandler(w http.ResponseWriter, r *http.Request) {
 		Year:  int(year),
 	}
 
+	dateAnswer := checkWeekday(date, r.FormValue("guess"))
+
+	if r.Header.Get("HX-Request") != "true" {
+		w.Header().Set("Content-Type", "application/json")
+		jsonData, err := json.Marshal(dateAnswer)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Write(jsonData)
+		return
+	}
+
 	w.Header().Set("Content-Type", "text/html")
-	isCorrect, answer := checkWeekday(date, r.FormValue("guess"))
-	if isCorrect {
+	if dateAnswer.Correct {
 		fmt.Fprint(w, "<p class='text-green-600'>Correct!</p>")
 	} else {
-		fmt.Fprint(w, "<p class='text-red-600'>Wrong! "+date.String()+" was a "+answer+"</p>")
+		fmt.Fprint(w, "<p class='text-red-600'>Wrong! "+date.String()+" was a "+dateAnswer.Answer+"</p>")
 	}
 }
 
-func checkWeekday(date Date, guess string) (bool, string) {
+func checkWeekday(date Date, guess string) DateAnswer {
 	t := time.Date(date.Year, time.Month(date.Month), date.Day, 0, 0, 0, 0, time.UTC)
 	weekday := t.Weekday().String()
-	return weekday == guess, weekday
+	return DateAnswer{weekday == guess, weekday}
 }
 
 func newDate(startYear int, endYear int, monthDays map[int][]int) Date {
