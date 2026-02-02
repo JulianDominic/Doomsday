@@ -98,26 +98,58 @@ type DateAnswer struct {
 	Answer  string `json:"answer"`
 }
 
+type PostDateRequest struct {
+	Day   int64  `json:"day"`
+	Month int64  `json:"month"`
+	Year  int64  `json:"year"`
+	Guess string `json:"guess"`
+}
+
 func postDateHandler(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "Bad Request", http.StatusBadRequest)
 		return
 	}
+	var day int64
+	var month int64
+	var year int64
+	var guess string
 
-	day, err := strconv.ParseInt(r.FormValue("day"), 10, 0)
-	if err != nil {
-		http.Error(w, "Error parsing 'day'", http.StatusBadRequest)
-		return
-	}
-	month, err := strconv.ParseInt(r.FormValue("month"), 10, 0)
-	if err != nil {
-		http.Error(w, "Error parsing 'month'", http.StatusBadRequest)
-		return
-	}
-	year, err := strconv.ParseInt(r.FormValue("year"), 10, 0)
-	if err != nil {
-		http.Error(w, "Error parsing 'year'", http.StatusBadRequest)
-		return
+	if r.Header.Get("Content-Type") == "application/json" {
+		defer r.Body.Close()
+		if r.Body == nil {
+			http.Error(w, "Please send a request body", http.StatusBadRequest)
+			return
+		}
+
+		var postDateRequst PostDateRequest
+		err := json.NewDecoder(r.Body).Decode(&postDateRequst)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		day = postDateRequst.Day
+		month = postDateRequst.Month
+		year = postDateRequst.Year
+		guess = postDateRequst.Guess
+	} else {
+		var err error
+		day, err = strconv.ParseInt(r.FormValue("day"), 10, 0)
+		if err != nil {
+			http.Error(w, "Error parsing 'day'", http.StatusBadRequest)
+			return
+		}
+		month, err = strconv.ParseInt(r.FormValue("month"), 10, 0)
+		if err != nil {
+			http.Error(w, "Error parsing 'month'", http.StatusBadRequest)
+			return
+		}
+		year, err = strconv.ParseInt(r.FormValue("year"), 10, 0)
+		if err != nil {
+			http.Error(w, "Error parsing 'year'", http.StatusBadRequest)
+			return
+		}
+		guess = r.FormValue("guess")
 	}
 
 	if !(isValidDate(int(day), int(month), int(year))) {
@@ -131,7 +163,7 @@ func postDateHandler(w http.ResponseWriter, r *http.Request) {
 		Year:  int(year),
 	}
 
-	dateAnswer := checkWeekday(date, r.FormValue("guess"))
+	dateAnswer := checkWeekday(date, guess)
 
 	if r.Header.Get("HX-Request") != "true" {
 		w.Header().Set("Content-Type", "application/json")
