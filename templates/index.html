@@ -14,14 +14,14 @@
         <h1 class="text-3xl">
             Guess the day of the week:
         </h1>
-        <form class="flex flex-col m-4 gap-4" hx-post="/date" hx-target="#result" hx-trigger="click from:#submit">
+        <form class="flex flex-col m-4 gap-4 items-center justify-center" hx-post="/date" hx-target="#result" hx-trigger="click from:#submit">
             <div hx-get="/date" hx-trigger="load, click from:#submit" hx-target="#date"></div>
             <div id="date">
                 {{ block "date" . }}
                 {{ end }}
             </div>
             <div id="result"></div>
-            <select class="border border-solid rounded-xl p-2" name="guess">
+            <select class="border border-solid rounded-xl p-2 w-2xs" name="guess">
                 <option>Monday</option>
                 <option>Tuesday</option>
                 <option>Wednesday</option>
@@ -32,6 +32,90 @@
             </select>
             <button action="submit" id="submit" class="border border-solid rounded-xl p-1 w-2xs">Submit</button>
         </form>
+        <div id="Doomsday explainer" class="w-2xs">
+            <p>Doomsday in year 2000 is <strong>Tuesday</strong></p>
+            <p>To calculate the Doomsday of a given year:</p>
+            <ul class="pl-5 list-disc">
+                <li>How many times can 12 fit in the last two digits of the year?</li>
+                <li>Find the difference between the (last two digits of the year) and the product of (calculation 1 and
+                    12)</li>
+                <li>How many times can 4 fit in calculation 2?</li>
+                <li>What is the current century's Doomsday?</li>
+                <li>Add up all the results</li>
+                <li>Take the final calculation modulo 7</li>
+            </ul>
+        </div>
+        <table class="border-separate border border-gray-400">
+            <tbody>
+                <tr>
+                    <th class="border border-gray-300">Month</th>
+                    <th class="border border-gray-300">Doomsday</th>
+                    <th class="border border-gray-300">Leap Year</th>
+                </tr>
+                <tr>
+                    <td class="border border-gray-300">01</td>
+                    <td class="border border-gray-300">03</td>
+                    <td class="border border-gray-300">04</td>
+                </tr>
+                <tr>
+                    <td class="border border-gray-300">02</td>
+                    <td class="border border-gray-300">28</td>
+                    <td class="border border-gray-300">29</td>
+                </tr>
+                <tr>
+                    <td class="border border-gray-300">03</td>
+                    <td class="border border-gray-300">14</td>
+                    <td class="border border-gray-300">-</td>
+                </tr>
+                <tr>
+                    <td class="border border-gray-300">04</td>
+                    <td class="border border-gray-300">04</td>
+                    <td class="border border-gray-300">-</td>
+                </tr>
+                <tr>
+                    <td class="border border-gray-300">05</td>
+                    <td class="border border-gray-300">09</td>
+                    <td class="border border-gray-300">-</td>
+
+                </tr>
+
+                <tr>
+                    <td class="border border-gray-300">06</td>
+                    <td class="border border-gray-300">06</td>
+                    <td class="border border-gray-300">-</td>
+                </tr>
+                <tr>
+                    <td class="border border-gray-300">07</td>
+                    <td class="border border-gray-300">04/11</td>
+                    <td class="border border-gray-300">-</td>
+                </tr>
+                <tr>
+                    <td class="border border-gray-300">08</td>
+                    <td class="border border-gray-300">08</td>
+                    <td class="border border-gray-300">-</td>
+                </tr>
+                <tr>
+                    <td class="border border-gray-300">09</td>
+                    <td class="border border-gray-300">05</td>
+                    <td class="border border-gray-300">-</td>
+                </tr>
+                <tr>
+                    <td class="border border-gray-300">10</td>
+                    <td class="border border-gray-300">10/31</td>
+                    <td class="border border-gray-300">-</td>
+                </tr>
+                <tr>
+                    <td class="border border-gray-300">11</td>
+                    <td class="border border-gray-300">07</td>
+                    <td class="border border-gray-300">-</td>
+                </tr>
+                <tr>
+                    <td class="border border-gray-300">12</td>
+                    <td class="border border-gray-300">12/26</td>
+                    <td class="border border-gray-300">-</td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 </body>
 
