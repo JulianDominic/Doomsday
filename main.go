@@ -78,11 +78,21 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 	templates.ExecuteTemplate(w, "index.html", nil)
 }
 
+type DateDisplay struct {
+	Date    Date   `json:"date"`
+	Month_S string `json:"month_s"`
+}
+
 func getDateHandler(w http.ResponseWriter, r *http.Request) {
-	date := newDate(2000, 2026, monthDays)
+	date := newDate(2000, time.Now().Year(), monthDays)
+	monthString := time.Month(date.Month).String()
+	dateDisplay := DateDisplay{
+		Date:    date,
+		Month_S: monthString,
+	}
 	if r.Header.Get("HX-Request") != "true" {
 		w.Header().Set("Content-Type", "application/json")
-		jsonData, err := json.Marshal(date)
+		jsonData, err := json.Marshal(dateDisplay)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -90,7 +100,7 @@ func getDateHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write(jsonData)
 		return
 	}
-	templates.ExecuteTemplate(w, "date", date)
+	templates.ExecuteTemplate(w, "date", dateDisplay)
 }
 
 type DateAnswer struct {

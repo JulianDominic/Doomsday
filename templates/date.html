@@ -1,8 +1,8 @@
 {{ define "date" }}
     <div class="text-center p-4 text-4xl">
-        {{ .Day }}-{{ .Month }}-{{ .Year }}
+        {{ .Date.Day }}-{{ .Month_S }}-{{ .Date.Year }}
     </div>
-    <input type="hidden" name="day" value="{{ .Day }}">
-    <input type="hidden" name="month" value="{{ .Month }}">
-    <input type="hidden" name="year" value="{{ .Year }}">
+    <input type="hidden" name="day" value="{{ .Date.Day }}">
+    <input type="hidden" name="month" value="{{ .Date.Month }}">
+    <input type="hidden" name="year" value="{{ .Date.Year }}">
 {{ end }}
