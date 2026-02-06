@@ -50,10 +50,10 @@ func main() {
 	mux.HandleFunc("POST /date", postDateHandler)
 
 	protocol := "http"
-	serverAddr := "localhost:8080"
+	serverAddr := "0.0.0.0:8080"
 
 	server := &http.Server{
-		Addr:    "localhost:8080",
+		Addr:    serverAddr,
 		Handler: loggingMiddleware(mux),
 	}
 	log.Printf("Server starting on %s://%s", protocol, serverAddr)
